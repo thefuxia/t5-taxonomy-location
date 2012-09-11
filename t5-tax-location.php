@@ -31,8 +31,20 @@
  * THE SOFTWARE.
  */
 
-// Wait until all needed functions are loaded.
-add_action( 'init', array ( 'T5_Taxonomy_Location', 'get_instance' ) );
+
+register_activation_hook(
+	__FILE__ ,
+	array ( 'T5_Taxonomy_Location', 'flush_rewrite_rules' )
+);
+register_deactivation_hook(
+	__FILE__ ,
+	array ( 'T5_Taxonomy_Location', 'flush_rewrite_rules' )
+);
+
+add_action(
+	'init',
+	array ( 'T5_Taxonomy_Location', 'get_instance' )
+);
 
 /**
  * Register the taxonomy, load language files.
@@ -73,14 +85,26 @@ class T5_Taxonomy_Location
 	 *
 	 * @wp-hook init
 	 * @since   2012.09.11
+	 * @return  void
 	 */
 	public function __construct()
 	{
 		// no translation in front-end
 		is_admin() and $this->load_language();
 		$this->register_taxonomy();
+		add_action(
+			'right_now_content_table_end',
+			array ( $this, 'add_to_dashboard' )
+		);
 	}
 
+	/**
+	 * Register taxonomy.
+	 *
+	 * @wp-hook init
+	 * @since   2012.09.11
+	 * @return  void
+	 */
 	protected function register_taxonomy()
 	{
 		$this->set_labels();
@@ -109,9 +133,15 @@ class T5_Taxonomy_Location
 		);
 
 		register_taxonomy( $this->taxonomy, $tax_post_types, $args );
-		add_action( 'right_now_content_table_end', array ( $this, 'add_to_dashboard' ) );
 	}
 
+	/**
+	 * Create taxonomy labels.
+	 *
+	 * @wp-hook init
+	 * @since   2012.09.11
+	 * @return  void
+	 */
 	protected function set_labels()
 	{
 		$labels = array (
@@ -147,7 +177,8 @@ class T5_Taxonomy_Location
 	/**
 	 * Show name and number in the Right Now dashboard widget.
 	 *
-	 * @return void
+	 * @wp-hook right_now_content_table_end
+	 * @return  void
 	 */
 	public function add_to_dashboard()
 	{
@@ -177,10 +208,11 @@ class T5_Taxonomy_Location
 	 *
 	 * Helper for add_to_dashboard()
 	 *
-	 * @param  string $name CPT or taxonomy name
-	 * @param  int    $num Amount of CPTs or taxonomy items
-	 * @param  string $text Public name of the item
-	 * @return void
+	 * @wp-hook right_now_content_table_end
+	 * @param   string $name Taxonomy name
+	 * @param   int    $num Amount of taxonomy items
+	 * @param   string $text Public name of the item
+	 * @return  void
 	 */
 	protected function print_dashboard_row( $name, $num, $text )
 	{
@@ -193,6 +225,7 @@ class T5_Taxonomy_Location
 	 *
 	 * @wp-hook init
 	 * @since   2012.09.11
+	 * @return  void
 	 */
 	protected function load_language()
 	{
@@ -201,5 +234,24 @@ class T5_Taxonomy_Location
 			FALSE,
 			plugin_basename( __FILE__ ) . '/languages'
 		);
+	}
+
+	/**
+	 * Add the taxonomy slug to rewrite rules after the taxonomy is registered.
+	 *
+	 * @wp-hook activate
+	 * @wp-hook deactivate
+	 * @since   2012.09.11
+	 * @return  void
+	 */
+	public static function flush_rewrite_rules()
+	{
+		// no need to register the taxonomy on deactivation
+		if ( 'deactivate_' . plugin_basename( __FILE__) === current_filter() )
+		{
+			remove_action( 'init', array ( __CLASS__, 'get_instance' ) );
+		}
+
+		add_action( 'init', 'flush_rewrite_rules', 11 );
 	}
 }
