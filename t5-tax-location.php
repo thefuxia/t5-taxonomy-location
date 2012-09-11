@@ -233,7 +233,7 @@ class T5_Taxonomy_Location
 		$loaded = load_plugin_textdomain(
 			'plugin_t5_tax_location',
 			FALSE,
-			plugin_basename( __DIR__ ) . '/languages'
+			plugin_basename( dirname( __FILE__ ) ) . '/languages'
 		);
 	}
 
