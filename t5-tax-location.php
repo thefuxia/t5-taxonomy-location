@@ -248,7 +248,7 @@ class T5_Taxonomy_Location
 	public static function flush_rewrite_rules()
 	{
 		// no need to register the taxonomy on deactivation
-		if ( 'deactivate_' . plugin_basename( __FILE__) === current_filter() )
+		if ( 'deactivate_' . plugin_basename( __FILE__ ) === current_filter() )
 		{
 			remove_action( 'init', array ( __CLASS__, 'get_instance' ) );
 		}
