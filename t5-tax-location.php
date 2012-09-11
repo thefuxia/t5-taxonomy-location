@@ -1,6 +1,7 @@
 <?php # -*- coding: utf-8 -*-
 /**
  * Plugin Name: T5 Taxonomy Location
+ * Plugin URI:  https://github.com/toscho/t5-taxonomy-location
  * Text Domain: plugin_t5_tax_location
  * Domain Path: /languages
  * Description: Creates a new taxonomy for locations.
