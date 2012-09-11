@@ -230,10 +230,10 @@ class T5_Taxonomy_Location
 	 */
 	protected function load_language()
 	{
-		load_plugin_textdomain(
+		$loaded = load_plugin_textdomain(
 			'plugin_t5_tax_location',
 			FALSE,
-			plugin_basename( __FILE__ ) . '/languages'
+			plugin_basename( __DIR__ ) . '/languages'
 		);
 	}
 
