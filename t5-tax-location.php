@@ -5,7 +5,7 @@
  * Text Domain: plugin_t5_tax_location
  * Domain Path: /languages
  * Description: Creates a new taxonomy for locations.
- * Version:     2012.09.11
+ * Version:     2013.12.10
  * Author:      Thomas Scholz <info@toscho.de>
  * Author URI:  http://toscho.de
  * License:     MIT
@@ -93,9 +93,16 @@ class T5_Taxonomy_Location
 		// no translation in front-end
 		is_admin() and $this->load_language();
 		$this->register_taxonomy();
+		// pre WP 3.8
 		add_action(
 			'right_now_content_table_end',
 			array ( $this, 'add_to_dashboard' )
+		);
+		// WP 3.8+
+		// see http://core.trac.wordpress.org/ticket/26495
+		add_filter(
+			'dashboard_glance_items',
+			array ( $this, 'add_to_glance' )
 		);
 	}
 
@@ -176,6 +183,36 @@ class T5_Taxonomy_Location
 	}
 
 	/**
+	 * Add locations to the new "At a glance" dashboard widget.
+	 *
+	 * @param  array $items
+	 * @return array
+	 */
+	public function add_to_glance( Array $items )
+	{
+		$num  = wp_count_terms( $this->taxonomy );
+		// Singular or Plural.
+		$text = _n(
+			'%s Location',
+			'%s Locations',
+			$num,
+			'plugin_t5_tax_location'
+		);
+		// thousands separator etc.
+		$text = sprintf( $text, number_format_i18n( $num ) );
+
+		if ( current_user_can( "manage_$this->taxonomy" ) )
+		{
+			$url  = admin_url( "edit-tags.php?taxonomy=$this->taxonomy" );
+			$text = "<a href='$url'>$text</a>";
+		}
+
+		$items[] = $text;
+
+		return $items;
+	}
+
+	/**
 	 * Show name and number in the Right Now dashboard widget.
 	 *
 	 * @wp-hook right_now_content_table_end
@@ -184,8 +221,6 @@ class T5_Taxonomy_Location
 	public function add_to_dashboard()
 	{
 		$num  = wp_count_terms( $this->taxonomy );
-		// thousands separator etc.
-		$num  = number_format_i18n( $num );
 		// Singular or Plural.
 		$text = _n(
 			$this->labels['singular_name'],
@@ -193,6 +228,8 @@ class T5_Taxonomy_Location
 			$num,
 			'plugin_t5_tax_location'
 		);
+		// thousands separator etc.
+		$num  = number_format_i18n( $num );
 
 		if ( current_user_can( "manage_$this->taxonomy" ) )
 		{
